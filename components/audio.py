@@ -5,11 +5,12 @@ import librosa
 import pandas as pd
 import streamlit as st
 
-from pathlib import Path
+from pathlib import Path, PosixPath
+from typing import List
 
 
 @st.cache
-def read_audio(path: Path):
+def read_audio(path: str):
     with audioread.audio_open(path) as f:
         sr = f.samplerate
     warnings.filterwarnings("ignore")
@@ -37,13 +38,22 @@ def configure_audio_dir(df: pd.DataFrame):
             st.warning(
                 "Specified directory does not contain readable audio file.")
             glob_result = list(base_path.glob("*"))
-            st.sidebar.write("Directories in this directory")
+            st.write("Directories in this directory")
             dirs = [path.name for path in glob_result if path.is_dir()]
-            st.sidebar.write(dirs)
+            st.write(dirs)
         return None
+
+
+def open_specified_audio(audio_files: List[PosixPath]):
+    audio_file_paths = [str(path) for path in audio_files]
+    path = st.sidebar.selectbox("File to read", options=audio_file_paths)
+
+    y, _ = read_audio(path)
+    st.audio(y)
 
 
 def check_audio_option(df: pd.DataFrame):
     st.sidebar.subheader("Check audio settings")
 
     audio_files = configure_audio_dir(df)
+    open_specified_audio(audio_files)
