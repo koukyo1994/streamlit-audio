@@ -31,7 +31,15 @@ def configure_audio_dir(df: pd.DataFrame):
     elif has_wav:
         return list(base_path.glob("*.wav"))
     else:
-        st.warning("Specified directory does not contain readable audio file.")
+        if not base_path.exists():
+            st.warning("Specified directory does not exists")
+        else:
+            st.warning(
+                "Specified directory does not contain readable audio file.")
+            glob_result = list(base_path.glob("*"))
+            st.sidebar.write("Directories in this directory")
+            dirs = [path.name for path in glob_result if path.is_dir()]
+            st.sidebar.write(dirs)
         return None
 
 
