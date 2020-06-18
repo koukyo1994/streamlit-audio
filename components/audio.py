@@ -48,12 +48,14 @@ def open_specified_audio(audio_files: List[PosixPath]):
     audio_file_paths = [str(path) for path in audio_files]
     path = st.sidebar.selectbox("File to read", options=audio_file_paths)
 
-    y, _ = read_audio(path)
-    st.audio(y)
+    with open(path, "rb") as f:
+        audio_bytes = f.read()
+    st.audio(audio_bytes, format="audio/mp3")
 
 
 def check_audio_option(df: pd.DataFrame):
     st.sidebar.subheader("Check audio settings")
 
     audio_files = configure_audio_dir(df)
-    open_specified_audio(audio_files)
+    if audio_files is not None:
+        open_specified_audio(audio_files)
