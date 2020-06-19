@@ -50,6 +50,7 @@ def open_specified_audio(audio_files: List[PosixPath]):
 
     with open(path, "rb") as f:
         audio_bytes = f.read()
+
     st.audio(audio_bytes, format="audio/mp3")
 
 
