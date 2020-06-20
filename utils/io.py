@@ -1,18 +1,40 @@
-import pandas as pd
+import audioread
+
 import streamlit as st
 
 from pathlib import Path
 
 
 @st.cache
-def read_csv(uploaded_file):
-    df = pd.read_csv(uploaded_file)
-    return df
+def read_audio_bytes(path: Path):
+    with open(path, "rb") as f:
+        audio_bytes = f.read()
+
+    return audio_bytes
 
 
 @st.cache
-def read_audio(uploaded_file):
-    print(dir(uploaded_file))
+def check_audio_info(path: Path):
+    path_ = str(path)
+    with audioread.audio_open(path_) as f:
+        sr = f.samplerate
+        ch = f.channels
+        dur = f.duration
+
+    return {"sample_rate": sr, "channels": ch, "duration": dur}
+
+
+def display_media_audio(path: Path):
+    format_ = path.name.split(".")[-1]
+    if format_ == "mp3":
+        format_ = "audio/mp3"
+    elif format_ == "wav":
+        format_ = "audio/wav"
+    else:
+        st.warning("Selected type is not readable format")
+
+    if format_ in {"audio/wav", "audio/mp3"}:
+        st.audio(read_audio_bytes(path), format=format_)
 
 
 def check_folder(folder: str):
@@ -44,4 +66,4 @@ def check_folder(folder: str):
                 key=f"{str(folder)}")
 
             new_folder = path / subfolder
-            check_folder(str(new_folder))
+            return check_folder(str(new_folder))
