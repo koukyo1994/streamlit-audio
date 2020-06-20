@@ -1,2 +1,2 @@
 from .base import *
-from .plots import waveplot
+from .plots import waveplot, specshow

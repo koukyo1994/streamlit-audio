@@ -26,3 +26,4 @@ if __name__ == "__main__":
 
         y = utils.read_audio(audio_path, audio_info)
         C.waveplot(y, audio_info["sample_rate"])
+        C.specshow(y, audio_info["sample_rate"])
