@@ -1,8 +1,18 @@
 import audioread
 
+import librosa
 import streamlit as st
 
 from pathlib import Path
+from typing import Optional
+
+
+@st.cache
+def read_audio(path: Path, info: dict, sr: Optional[int] = None):
+    if sr is None:
+        sr = info["sample_rate"]
+    y, _ = librosa.load(path, sr=sr, mono=True, res_type="kaiser_fast")
+    return y
 
 
 @st.cache
@@ -24,7 +34,7 @@ def check_audio_info(path: Path):
     return {"sample_rate": sr, "channels": ch, "duration": dur}
 
 
-def display_media_audio(path: Path):
+def display_media_audio(path: Path, start_second: int = 0):
     format_ = path.name.split(".")[-1]
     if format_ == "mp3":
         format_ = "audio/mp3"
@@ -34,7 +44,8 @@ def display_media_audio(path: Path):
         st.warning("Selected type is not readable format")
 
     if format_ in {"audio/wav", "audio/mp3"}:
-        st.audio(read_audio_bytes(path), format=format_)
+        st.audio(
+            read_audio_bytes(path), start_time=start_second, format=format_)
 
 
 def check_folder(folder: str):

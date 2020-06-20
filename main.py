@@ -21,4 +21,8 @@ if __name__ == "__main__":
         audio_info = utils.check_audio_info(audio_path)
 
         C.write_audio_info_to_sidebar(audio_path, audio_info)
-        utils.display_media_audio(audio_path)
+        second = C.set_start_second(max_value=audio_info["duration"])
+        utils.display_media_audio(audio_path, second)
+
+        y = utils.read_audio(audio_path, audio_info)
+        C.waveplot(y, audio_info["sample_rate"])
