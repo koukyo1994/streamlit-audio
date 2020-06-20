@@ -17,3 +17,12 @@ def set_start_second(max_value: float):
     second = st.sidebar.slider(
         "start second", min_value=0, max_value=int(max_value), value=0, step=1)
     return second
+
+
+def set_sampling_rate(current_value: int):
+    st.sidebar.markdown("Sampling rate")
+    options = [8000, 16000, 22050, 24000, 32000, 44100, 48000]
+    index = options.index(current_value)
+    sr = st.sidebar.selectbox(
+        "Choose sampling rate", options=options, index=index)
+    return sr

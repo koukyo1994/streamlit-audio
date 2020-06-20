@@ -22,8 +22,9 @@ if __name__ == "__main__":
 
         C.write_audio_info_to_sidebar(audio_path, audio_info)
         second = C.set_start_second(max_value=audio_info["duration"])
+        sr = C.set_sampling_rate(audio_info["sample_rate"])
         utils.display_media_audio(audio_path, second)
 
-        y = utils.read_audio(audio_path, audio_info)
-        C.waveplot(y, audio_info["sample_rate"])
-        C.specshow(y, audio_info["sample_rate"])
+        y = utils.read_audio(audio_path, audio_info, sr=sr)
+        C.waveplot(y, sr)
+        C.specshow(y, sr)
