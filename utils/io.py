@@ -49,7 +49,7 @@ def display_media_audio_from_ndarray(y: np.ndarray, sr: int):
         params = (1, 2, sr, len(binary_wave), "NONE", "not compressed")
         w.setparams(params)  # type: ignore
         w.writeframes(binary_wave)
-
+        w.close()
         fp.seek(0)
         bytesio = io.BytesIO(fp.read())
 
