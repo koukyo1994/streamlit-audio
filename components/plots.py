@@ -94,7 +94,8 @@ def specshow(y: np.ndarray, sr: int):
         if st.button("Show melspectrogram"):
             with st.spinner("Calculating melspectrogram"):
                 melspec = melspectrogram(y_plot, melspec_params, log)
-
+            height, width = melspec.shape
+            st.write(f"{height} x {width} matrix")
             with st.spinner("Plotting"):
                 plt.figure(figsize=(12, 4))
                 display.specshow(
@@ -105,5 +106,6 @@ def specshow(y: np.ndarray, sr: int):
                     y_axis="mel",
                     fmin=fmin,
                     fmax=fmax)
+                plt.colorbar()
 
             st.pyplot()

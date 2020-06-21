@@ -1,6 +1,11 @@
 import audioread
+import io
+import tempfile
+import struct
+import wave
 
 import librosa
+import numpy as np
 import streamlit as st
 
 from pathlib import Path
@@ -32,6 +37,23 @@ def check_audio_info(path: Path):
         dur = f.duration
 
     return {"sample_rate": sr, "channels": ch, "duration": dur}
+
+
+def display_media_audio_from_ndarray(y: np.ndarray, sr: int):
+    max_num = 32767.0 / y.max()
+    y_hex = (y * max_num).astype(np.int16)
+    binary_wave = struct.pack("h" * len(y_hex), *(y_hex.tolist()))
+
+    with tempfile.TemporaryFile() as fp:
+        w = wave.Wave_write(fp)  # type: ignore
+        params = (1, 2, sr, len(binary_wave), "NONE", "not compressed")
+        w.setparams(params)  # type: ignore
+        w.writeframes(binary_wave)
+
+        fp.seek(0)
+        bytesio = io.BytesIO(fp.read())
+
+    st.audio(bytesio)
 
 
 def display_media_audio(path: Path, start_second: int = 0):
