@@ -1,8 +1,3 @@
-import io
-import tempfile
-import struct
-import wave
-
 import streamlit as st
 
 import components as C
@@ -37,10 +32,11 @@ if __name__ == "__main__":
         y = utils.read_audio(audio_path, audio_info, sr=sr)
         if options == "preprocessing":
             y_processed = C.preprocess_on_wave(y, sr=sr)
-            print(y_processed)
             if y_processed is not None:
                 st.text("Processed audio")
                 utils.display_media_audio_from_ndarray(y_processed, sr)
-
-        C.waveplot(y, sr)
-        C.specshow(y, sr)
+                C.waveplot(y, sr, y_processed)
+                C.specshow(y, sr, y_processed)
+        else:
+            C.waveplot(y, sr)
+            C.specshow(y, sr)

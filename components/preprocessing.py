@@ -26,7 +26,7 @@ def preprocess_on_wave(y: np.ndarray, sr: int):
             "cutoff", min_value=20.0, max_value=4000.0, value=500.0, step=10.0)
         filtered = butterworth_filter(
             y, sr=sr, N=param_N, cutoff=param_cutoff, btype="lowpass")
-        return filtered
+        return np.asfortranarray(filtered)
     elif option == "highpass":
         param_N = st.sidebar.number_input(
             "N", min_value=1, max_value=10, value=4, step=1)
@@ -38,7 +38,7 @@ def preprocess_on_wave(y: np.ndarray, sr: int):
             step=10.0)
         filtered = butterworth_filter(
             y, sr=sr, N=param_N, cutoff=param_cutoff, btype="highpass")
-        return filtered
+        return np.asfortranarray(filtered)
     elif option == "denoise":
         frame_len = st.sidebar.number_input(
             "frame_len", min_value=1, max_value=8192, value=512, step=32)
