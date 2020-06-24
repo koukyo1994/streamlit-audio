@@ -92,7 +92,7 @@ def check_folder(folder: str):
             st.warning("No wav or mp3 found under the directory you specified")
             return
         else:
-            subdir_names = [subdir.name for subdir in subdirs]
+            subdir_names = sorted([subdir.name for subdir in subdirs])
             subfolder = st.selectbox(
                 f"Pick one folder below {str(folder)}",
                 options=subdir_names,

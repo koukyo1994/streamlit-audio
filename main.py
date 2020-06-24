@@ -10,10 +10,10 @@ if __name__ == "__main__":
     path = utils.check_folder(base_folder)
 
     if path is not None:
-        audio_files = [
+        audio_files = sorted([
             f.name
             for f in (list(path.glob("*.wav")) + list(path.glob("*.mp3")))
-        ]
+        ])
         audio_file_name = st.selectbox(
             "Choose audio file", options=audio_files)
 
