@@ -29,14 +29,33 @@ if __name__ == "__main__":
             options=["normal", "preprocessing", "augmentations"])
         utils.display_media_audio(audio_path, second)
 
+        annotation = st.sidebar.file_uploader(
+            "Upload annotation file if exist")
+        if annotation is not None:
+            event_level_annotation = utils.read_csv(annotation)
+        else:
+            event_level_annotation = None
+
         y = utils.read_audio(audio_path, audio_info, sr=sr)
         if options == "preprocessing":
             y_processed = C.preprocess_on_wave(y, sr=sr)
             if y_processed is not None:
                 st.text("Processed audio")
                 utils.display_media_audio_from_ndarray(y_processed, sr)
-                C.waveplot(y, sr, y_processed)
-                C.specshow(y, sr, y_processed)
+                if event_level_annotation is None:
+                    C.waveplot(y, sr, y_processed)
+                    C.specshow(y, sr, y_processed)
+                else:
+                    C.waveplot_with_annotation(y, sr, event_level_annotation,
+                                               audio_file_name, y_processed)
         else:
-            C.waveplot(y, sr)
-            C.specshow(y, sr)
+            if event_level_annotation is None:
+                C.waveplot(y, sr)
+                C.specshow(y, sr)
+            else:
+                C.waveplot_with_annotation(
+                    y,
+                    sr,
+                    event_level_annotation,
+                    audio_file_name,
+                    processed=None)

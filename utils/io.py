@@ -6,10 +6,17 @@ import wave
 
 import librosa
 import numpy as np
+import pandas as pd
 import streamlit as st
 
 from pathlib import Path
 from typing import Optional
+
+
+@st.cache
+def read_csv(uploaded_file):
+    df = pd.read_csv(uploaded_file)
+    return df
 
 
 @st.cache

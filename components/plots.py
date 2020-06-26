@@ -2,6 +2,7 @@ import librosa
 import librosa.display as display
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import streamlit as st
 
 
@@ -32,6 +33,72 @@ def waveplot(y: np.ndarray, sr: int, processed=None):
         plt.figure(figsize=(12, 4))
         plt.grid(True)
         display.waveplot(y[start_index:end_index], sr=sr, alpha=0.5)
+        if processed is not None:
+            display.waveplot(
+                processed[start_index:end_index],
+                sr=sr,
+                alpha=0.5,
+                color="red")
+
+        st.pyplot()
+
+
+def waveplot_with_annotation(y: np.ndarray,
+                             sr: int,
+                             annotation: pd.DataFrame,
+                             filename: str,
+                             processed=None):
+    plot_wave = st.checkbox("Waveplot")
+    if filename.endswith(".mp3"):
+        filename = filename.replace(".mp3", ".wav")
+    events = annotation.query(f"filename == '{filename}'")
+    colors = [
+        "#bf6565", "#ac7ceb", "#e3e176", "#f081e1", "#e8cb6b", "#25b4db",
+        "#fa787e", "#a9f274", "#1d7335", "#797fb3"
+    ]
+    if plot_wave:
+        st.sidebar.markdown("#### Waveplot settings")
+        start_second = st.sidebar.number_input(
+            "start second",
+            min_value=0,
+            max_value=len(y) // sr,
+            value=0,
+            step=1,
+            key="waveplot_start")
+        end_second = st.sidebar.number_input(
+            "end second",
+            min_value=0,
+            max_value=len(y) // sr,
+            value=len(y) // sr,
+            step=1,
+            key="waveplot_end")
+
+        start_index = start_second * sr
+        if end_second == len(y) // sr:
+            end_index = len(y)
+        else:
+            end_index = end_second * sr
+        events_in_period = events.query(
+            f"onset > {start_second} & offset < {end_second}")
+        uniq_labels = events_in_period["ebird_code"].unique().tolist()
+        plt.figure(figsize=(12, 4))
+        plt.grid(True)
+        display.waveplot(y[start_index:end_index], sr=sr, alpha=0.5)
+
+        used_color = []  # type: ignore
+        for i, event in events_in_period.iterrows():
+            onset = event.onset
+            offset = event.offset
+            color = colors[uniq_labels.index(event.ebird_code)]
+            if color not in used_color:
+                label = event.ebird_code
+                used_color.append(color)
+            else:
+                label = "_" + event.ebird_code
+            plt.axvspan(onset, offset, facecolor=color, alpha=0.5, label=label)
+
+        plt.legend()
+
         if processed is not None:
             display.waveplot(
                 processed[start_index:end_index],
