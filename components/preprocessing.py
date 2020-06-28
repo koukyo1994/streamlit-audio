@@ -1,3 +1,4 @@
+import nussl
 import numpy as np
 import streamlit as st
 import pyroomacoustics as pra
@@ -15,10 +16,10 @@ def butterworth_filter(y: np.ndarray,
     return y_filtered
 
 
-def preprocess_on_wave(y: np.ndarray, sr: int):
+def preprocess_on_wave(y: np.ndarray, sr: int, audio_path: str):
     st.sidebar.markdown("#### Preprocess option")
     option = st.sidebar.selectbox(
-        "process", options=["-", "lowpass", "highpass", "denoise"])
+        "process", options=["-", "lowpass", "highpass", "denoise", "nussl"])
     if option == "lowpass":
         param_N = st.sidebar.number_input(
             "N", min_value=1, max_value=10, value=4, step=1)
@@ -53,5 +54,33 @@ def preprocess_on_wave(y: np.ndarray, sr: int):
         denoised = pra.denoise.apply_iterative_wiener(
             y, frame_len, lpc_order, iterations, alpha, thresh)
         return denoised
+    elif option == "nussl":
+        history = nussl.AudioSignal(audio_path)
+        method = st.sidebar.selectbox(
+            "Denoise method",
+            options=[
+                "Repet", "ICA", "FT2D", "REPETSIM", "TimbreClustering", "HPSS",
+                "DUET", "PROJET"
+            ])
+        if method == "Repet":
+            separator = nussl.separation.primitive.Repet(history)
+        elif method == "ICA":
+            separator = nussl.separation.factorization.ICA(history)
+        elif method == "FT2D":
+            separator = nussl.separation.primitive.FT2D(history)
+        elif method == "REMETSIM":
+            separator = nussl.separation.primitive.REMETSIM(history)
+        elif method == "TimbreClustering":
+            separator = nussl.separation.primitive.TimbreClustering(history, num_sources=2, n_components=50)
+        elif method == "HPSS":
+            separator = nussl.separation.primitive.HPSS(history)
+        elif method == "DUET":
+            separator = nussl.separation.spatial.Duet(history, num_sources=2)
+        elif method == "PROJET":
+            separator = nussl.separation.spatial.Projet(history, num_sources=2)
+
+        estimates = separator()
+        foreground = estimates[1].audio_data[0]
+        return foreground
     else:
         return None

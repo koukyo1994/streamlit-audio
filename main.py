@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
     base_folder = st.text_input("specify directory which contains audio file")
     path = utils.check_folder(base_folder)
-
     if path is not None:
         audio_files = sorted([
             f.name
@@ -38,7 +37,8 @@ if __name__ == "__main__":
 
         y = utils.read_audio(audio_path, audio_info, sr=sr)
         if options == "preprocessing":
-            y_processed = C.preprocess_on_wave(y, sr=sr)
+            y_processed = C.preprocess_on_wave(
+                y, sr=sr, audio_path=str(audio_path))
             if y_processed is not None:
                 st.text("Processed audio")
                 utils.display_media_audio_from_ndarray(y_processed, sr)
@@ -47,6 +47,8 @@ if __name__ == "__main__":
                     C.specshow(y, sr, y_processed)
                 else:
                     C.waveplot_with_annotation(y, sr, event_level_annotation,
+                                               audio_file_name, y_processed)
+                    C.specshow_with_annotation(y, sr, event_level_annotation,
                                                audio_file_name, y_processed)
         else:
             if event_level_annotation is None:
@@ -59,3 +61,9 @@ if __name__ == "__main__":
                     event_level_annotation,
                     audio_file_name,
                     processed=None)
+                C.specshow_with_annotation(
+                    y,
+                    sr,
+                    event_level_annotation,
+                    audio_file_name,
+                    y_processed=None)
