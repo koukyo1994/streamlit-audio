@@ -76,10 +76,11 @@ def waveplot_with_annotation(y: np.ndarray,
         start_index = start_second * sr
         if end_second == len(y) // sr:
             end_index = len(y)
+            end_second = len(y) / sr
         else:
             end_index = end_second * sr
         events_in_period = events.query(
-            f"onset > {start_second} & offset < {end_second}")
+            f"onset >= {start_second} & offset <= {end_second}")
         uniq_labels = events_in_period["ebird_code"].unique().tolist()
         plt.figure(figsize=(12, 4))
         plt.grid(True)
@@ -115,6 +116,14 @@ def melspectrogram(y: np.ndarray, params: dict, log=True):
     if log:
         melspec = librosa.power_to_db(melspec)
     return melspec
+
+
+@st.cache
+def spectrogram(y: np.ndarray, params: dict, log=True):
+    spec = librosa.stft(y, **params)
+    if log:
+        spec = librosa.power_to_db(spec)
+    return spec
 
 
 def specshow_with_annotation(y: np.ndarray,
@@ -155,52 +164,78 @@ def specshow_with_annotation(y: np.ndarray,
         if y_processed is not None:
             y_plot_processed = y_processed[start_index:end_index]
         events_in_period = events.query(
-            f"onset > {start_second} & offset < {end_second}")
+            f"onset >= {start_second} & offset <= {end_second}")
         uniq_labels = events_in_period["ebird_code"].unique().tolist()
 
-        st.sidebar.markdown("##### Melspectrogram parameters")
+        st.sidebar.markdown("##### (Mel)spectrogram parameters")
+        mel = st.sidebar.checkbox("Mel scale")
+
         n_fft = st.sidebar.number_input(
             "n_fft", min_value=64, max_value=8192, value=1024, step=64)
         hop_length = st.sidebar.number_input(
             "hop_length", min_value=1, max_value=2048, value=320, step=10)
-        n_mels = st.sidebar.number_input(
-            "n_mels", min_value=1, max_value=512, value=64, step=16)
-        fmin = st.sidebar.number_input(
-            "fmin", min_value=1, max_value=8192, value=20, step=100)
-        fmax = st.sidebar.number_input(
-            "fmax", min_value=4000, max_value=44100, value=14000, step=100)
+        if mel:
+            n_mels = st.sidebar.number_input(
+                "n_mels", min_value=1, max_value=512, value=64, step=16)
+            fmin = st.sidebar.number_input(
+                "fmin", min_value=1, max_value=8192, value=20, step=100)
+            fmax = st.sidebar.number_input(
+                "fmax", min_value=4000, max_value=44100, value=14000, step=100)
         log = st.sidebar.checkbox("apply log")
 
-        melspec_params = {
-            "n_fft": n_fft,
-            "hop_length": hop_length,
-            "n_mels": n_mels,
-            "fmin": fmin,
-            "fmax": fmax,
-            "sr": sr
-        }
+        if mel:
+            melspec_params = {
+                "n_fft": n_fft,
+                "hop_length": hop_length,
+                "n_mels": n_mels,
+                "fmin": fmin,
+                "fmax": fmax,
+                "sr": sr
+            }
+        else:
+            spec_params = {
+                "n_fft": n_fft,
+                "hop_length": hop_length
+            }
 
         if st.button("Show melspectrogram"):
             with st.spinner("Calculating melspectrogram"):
-                melspec = melspectrogram(y_plot, melspec_params, log)
+                if mel:
+                    spec = melspectrogram(y_plot, melspec_params, log)
+                else:
+                    spec = spectrogram(y_plot, spec_params, log)
                 if y_processed is not None:
-                    melspec_processed = melspectrogram(y_plot_processed,
-                                                       melspec_params, log)
-            height, width = melspec.shape
+                    if mel:
+                        spec_processed = melspectrogram(y_plot_processed,
+                                                        melspec_params, log)
+                    else:
+                        spec_processed = spectrogram(y_plot_processed,
+                                                     spec_params, log)
+
+            height, width = spec.shape
             st.write(f"{height} x {width} matrix")
             if y_processed is not None:
                 with st.spinner("Plotting"):
                     fig = plt.figure(figsize=(12, 8))
                     ax1 = fig.add_subplot(2, 1, 1)
-                    display.specshow(
-                        melspec,
-                        sr=sr,
-                        hop_length=hop_length,
-                        x_axis="time",
-                        y_axis="mel",
-                        fmin=fmin,
-                        fmax=fmax,
-                        ax=ax1)
+                    if mel:
+                        display.specshow(
+                            spec,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="mel",
+                            fmin=fmin,
+                            fmax=fmax,
+                            ax=ax1)
+                    else:
+                        display.specshow(
+                            spec,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="linear",
+                            ax=ax1)
 
                     used_color = []  # type: ignore
                     for i, event in events_in_period.iterrows():
@@ -222,28 +257,46 @@ def specshow_with_annotation(y: np.ndarray,
                     ax1.legend()
 
                     ax2 = fig.add_subplot(2, 1, 2)
-                    display.specshow(
-                        melspec_processed,
-                        sr=sr,
-                        hop_length=hop_length,
-                        x_axis="time",
-                        y_axis="mel",
-                        fmin=fmin,
-                        fmax=fmax,
-                        ax=ax2)
-                    # fig.colorbar()
+                    if mel:
+                        display.specshow(
+                            spec_processed,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="mel",
+                            fmin=fmin,
+                            fmax=fmax,
+                            ax=ax2)
+                    else:
+                        display.specshow(
+                            spec_processed,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="linear",
+                            ax=ax2)
+
             else:
                 with st.spinner("Plotting"):
                     plt.figure(figsize=(12, 4))
-                    display.specshow(
-                        melspec,
-                        sr=sr,
-                        hop_length=hop_length,
-                        x_axis="time",
-                        y_axis="mel",
-                        fmin=fmin,
-                        fmax=fmax)
-                    plt.colorbar()
+                    if mel:
+                        display.specshow(
+                            spec,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="mel",
+                            fmin=fmin,
+                            fmax=fmax)
+                        plt.colorbar()
+                    else:
+                        display.specshow(
+                            spec,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="linear")
+                        plt.colorbar()
 
                     used_color = []  # type: ignore
                     for i, event in events_in_period.iterrows():
@@ -294,72 +347,114 @@ def specshow(y: np.ndarray, sr: int, y_processed=None):
         if y_processed is not None:
             y_plot_processed = y_processed[start_index:end_index]
 
-        st.sidebar.markdown("##### Melspectrogram parameters")
+        st.sidebar.markdown("##### (Mel)spectrogram parameters")
+        mel = st.sidebar.checkbox("Mel scale")
+
         n_fft = st.sidebar.number_input(
             "n_fft", min_value=64, max_value=8192, value=1024, step=64)
         hop_length = st.sidebar.number_input(
             "hop_length", min_value=1, max_value=2048, value=320, step=10)
-        n_mels = st.sidebar.number_input(
-            "n_mels", min_value=1, max_value=512, value=64, step=16)
-        fmin = st.sidebar.number_input(
-            "fmin", min_value=1, max_value=8192, value=20, step=100)
-        fmax = st.sidebar.number_input(
-            "fmax", min_value=4000, max_value=44100, value=14000, step=100)
+        if mel:
+            n_mels = st.sidebar.number_input(
+                "n_mels", min_value=1, max_value=512, value=64, step=16)
+            fmin = st.sidebar.number_input(
+                "fmin", min_value=1, max_value=8192, value=20, step=100)
+            fmax = st.sidebar.number_input(
+                "fmax", min_value=4000, max_value=44100, value=14000, step=100)
         log = st.sidebar.checkbox("apply log")
 
-        melspec_params = {
-            "n_fft": n_fft,
-            "hop_length": hop_length,
-            "n_mels": n_mels,
-            "fmin": fmin,
-            "fmax": fmax,
-            "sr": sr
-        }
+        if mel:
+            melspec_params = {
+                "n_fft": n_fft,
+                "hop_length": hop_length,
+                "n_mels": n_mels,
+                "fmin": fmin,
+                "fmax": fmax,
+                "sr": sr
+            }
+        else:
+            spec_params = {
+                "n_fft": n_fft,
+                "hop_length": hop_length
+            }
 
         if st.button("Show melspectrogram"):
             with st.spinner("Calculating melspectrogram"):
-                melspec = melspectrogram(y_plot, melspec_params, log)
+                if mel:
+                    spec = melspectrogram(y_plot, melspec_params, log)
+                else:
+                    spec = spectrogram(y_plot, spec_params, log)
                 if y_processed is not None:
-                    melspec_processed = melspectrogram(y_plot_processed,
-                                                       melspec_params, log)
-            height, width = melspec.shape
+                    if mel:
+                        spec_processed = melspectrogram(y_plot_processed,
+                                                        melspec_params, log)
+                    else:
+                        spec_processed = spectrogram(y_plot_processed,
+                                                     spec_params, log)
+
+            height, width = spec.shape
             st.write(f"{height} x {width} matrix")
             if y_processed is not None:
                 with st.spinner("Plotting"):
                     fig = plt.figure(figsize=(12, 8))
                     ax1 = fig.add_subplot(2, 1, 1)
-                    display.specshow(
-                        melspec,
-                        sr=sr,
-                        hop_length=hop_length,
-                        x_axis="time",
-                        y_axis="mel",
-                        fmin=fmin,
-                        fmax=fmax,
-                        ax=ax1)
+                    if mel:
+                        display.specshow(
+                            spec,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="mel",
+                            fmin=fmin,
+                            fmax=fmax,
+                            ax=ax1)
+                    else:
+                        display.specshow(
+                            spec,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="linear",
+                            ax=ax1)
 
                     ax2 = fig.add_subplot(2, 1, 2)
-                    display.specshow(
-                        melspec_processed,
-                        sr=sr,
-                        hop_length=hop_length,
-                        x_axis="time",
-                        y_axis="mel",
-                        fmin=fmin,
-                        fmax=fmax,
-                        ax=ax2)
-                    # fig.colorbar()
+                    if mel:
+                        display.specshow(
+                            spec_processed,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="mel",
+                            fmin=fmin,
+                            fmax=fmax,
+                            ax=ax2)
+                    else:
+                        display.specshow(
+                            spec_processed,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="linear",
+                            ax=ax2)
             else:
                 with st.spinner("Plotting"):
                     plt.figure(figsize=(12, 4))
-                    display.specshow(
-                        melspec,
-                        sr=sr,
-                        hop_length=hop_length,
-                        x_axis="time",
-                        y_axis="mel",
-                        fmin=fmin,
-                        fmax=fmax)
-                    plt.colorbar()
-
+                    if mel:
+                        display.specshow(
+                            spec,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="mel",
+                            fmin=fmin,
+                            fmax=fmax)
+                        plt.colorbar()
+                    else:
+                        display.specshow(
+                            spec,
+                            sr=sr,
+                            hop_length=hop_length,
+                            x_axis="time",
+                            y_axis="linear")
+                        plt.colorbar()
             st.pyplot()

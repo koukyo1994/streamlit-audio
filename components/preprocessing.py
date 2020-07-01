@@ -19,7 +19,7 @@ def butterworth_filter(y: np.ndarray,
 def preprocess_on_wave(y: np.ndarray, sr: int, audio_path: str):
     st.sidebar.markdown("#### Preprocess option")
     option = st.sidebar.selectbox(
-        "process", options=["-", "lowpass", "highpass", "denoise", "nussl"])
+        "process", options=["-", "normalize", "lowpass", "highpass", "denoise", "nussl"])
     if option == "lowpass":
         param_N = st.sidebar.number_input(
             "N", min_value=1, max_value=10, value=4, step=1)
@@ -40,6 +40,10 @@ def preprocess_on_wave(y: np.ndarray, sr: int, audio_path: str):
         filtered = butterworth_filter(
             y, sr=sr, N=param_N, cutoff=param_cutoff, btype="highpass")
         return np.asfortranarray(filtered)
+    elif option == "normalize":
+        max_vol = np.abs(y).max()
+        y_vol = y * 1 / (max_vol)
+        return np.asfortranarray(y_vol)
     elif option == "denoise":
         frame_len = st.sidebar.number_input(
             "frame_len", min_value=1, max_value=8192, value=512, step=32)
