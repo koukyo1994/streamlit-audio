@@ -50,6 +50,20 @@ if __name__ == "__main__":
                                                audio_file_name, y_processed)
                     C.specshow_with_annotation(y, sr, event_level_annotation,
                                                audio_file_name, y_processed)
+        elif options == "augmentations":
+            y_processed = C.augmentations_on_wave(
+                y, sr=sr)
+            if y_processed is not None:
+                st.text("Processed audio")
+                utils.display_media_audio_from_ndarray(y_processed, sr)
+                if event_level_annotation is None:
+                    C.waveplot(y, sr, y_processed)
+                    C.specshow(y, sr, y_processed)
+                else:
+                    C.waveplot_with_annotation(y, sr, event_level_annotation,
+                                               audio_file_name, y_processed)
+                    C.specshow_with_annotation(y, sr, event_level_annotation,
+                                               audio_file_name, y_processed)
         else:
             if event_level_annotation is None:
                 C.waveplot(y, sr)
