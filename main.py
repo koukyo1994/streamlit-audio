@@ -11,7 +11,8 @@ if __name__ == "__main__":
     if path is not None:
         audio_files = sorted([
             f.name
-            for f in (list(path.glob("*.wav")) + list(path.glob("*.mp3")))
+            for f in (list(path.glob("*.wav")) + list(path.glob("*.mp3")) +
+                      list(path.glob("*.flac")))
         ])
         audio_file_name = st.selectbox(
             "Choose audio file", options=audio_files)

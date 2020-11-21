@@ -69,10 +69,12 @@ def display_media_audio(path: Path, start_second: int = 0):
         format_ = "audio/mp3"
     elif format_ == "wav":
         format_ = "audio/wav"
+    elif format_ == "flac":
+        format_ = "audio/x-flac"
     else:
         st.warning("Selected type is not readable format")
 
-    if format_ in {"audio/wav", "audio/mp3"}:
+    if format_ in {"audio/wav", "audio/mp3", "audio/x-flac"}:
         st.audio(
             read_audio_bytes(path), start_time=start_second, format=format_)
 
@@ -85,6 +87,7 @@ def check_folder(folder: str):
     else:
         wavs = list(path.glob("*.wav"))
         mp3s = list(path.glob("*.mp3"))
+        flacs = list(path.glob("*.flac"))
         subdirs = [
             subpaths for subpaths in path.glob("*") if subpaths.is_dir()
         ]
@@ -95,6 +98,8 @@ def check_folder(folder: str):
         if len(mp3s) > 0:
             st.success(f"Found {len(mp3s)} mp3 files")
             return path
+        if len(flacs) > 0:
+            st.success(f"Found {len(flacs)} flac files")
         if len(subdirs) == 0:
             st.warning("No wav or mp3 found under the directory you specified")
             return
