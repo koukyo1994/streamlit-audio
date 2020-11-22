@@ -278,7 +278,7 @@ def specshow_with_annotation(y: np.ndarray,
 
             else:
                 with st.spinner("Plotting"):
-                    plt.figure(figsize=(12, 4))
+                    fig = plt.figure(figsize=(12, 4))
                     if mel:
                         display.specshow(
                             spec,
@@ -438,7 +438,7 @@ def specshow(y: np.ndarray, sr: int, y_processed=None):
                             ax=ax2)
             else:
                 with st.spinner("Plotting"):
-                    plt.figure(figsize=(12, 4))
+                    fig = plt.figure(figsize=(12, 4))
                     if mel:
                         display.specshow(
                             spec,
