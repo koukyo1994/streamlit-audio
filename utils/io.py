@@ -100,6 +100,7 @@ def check_folder(folder: str):
             return path
         if len(flacs) > 0:
             st.success(f"Found {len(flacs)} flac files")
+            return path
         if len(subdirs) == 0:
             st.warning("No wav or mp3 found under the directory you specified")
             return
