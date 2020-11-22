@@ -30,7 +30,7 @@ def waveplot(y: np.ndarray, sr: int, processed=None):
             end_index = len(y)
         else:
             end_index = end_second * sr
-        plt.figure(figsize=(12, 4))
+        fig = plt.figure(figsize=(12, 4))
         plt.grid(True)
         display.waveplot(y[start_index:end_index], sr=sr, alpha=0.5)
         if processed is not None:
@@ -40,7 +40,7 @@ def waveplot(y: np.ndarray, sr: int, processed=None):
                 alpha=0.5,
                 color="red")
 
-        st.pyplot()
+        st.pyplot(fig)
 
 
 def waveplot_with_annotation(y: np.ndarray,
@@ -82,7 +82,7 @@ def waveplot_with_annotation(y: np.ndarray,
         events_in_period = events.query(
             f"onset >= {start_second} & offset <= {end_second}")
         uniq_labels = events_in_period["ebird_code"].unique().tolist()
-        plt.figure(figsize=(12, 4))
+        fig = plt.figure(figsize=(12, 4))
         plt.grid(True)
         display.waveplot(y[start_index:end_index], sr=sr, alpha=0.5)
 
@@ -107,7 +107,7 @@ def waveplot_with_annotation(y: np.ndarray,
                 alpha=0.5,
                 color="red")
 
-        st.pyplot()
+        st.pyplot(fig)
 
 
 @st.cache
@@ -168,7 +168,7 @@ def specshow_with_annotation(y: np.ndarray,
         uniq_labels = events_in_period["ebird_code"].unique().tolist()
 
         st.sidebar.markdown("##### (Mel)spectrogram parameters")
-        mel = st.sidebar.checkbox("Mel scale")
+        mel = st.sidebar.checkbox("Mel scale", value=True)
 
         n_fft = st.sidebar.number_input(
             "n_fft", min_value=64, max_value=8192, value=1024, step=64)
@@ -181,7 +181,7 @@ def specshow_with_annotation(y: np.ndarray,
                 "fmin", min_value=1, max_value=8192, value=20, step=100)
             fmax = st.sidebar.number_input(
                 "fmax", min_value=4000, max_value=44100, value=14000, step=100)
-        log = st.sidebar.checkbox("apply log")
+        log = st.sidebar.checkbox("apply log", value=True)
 
         if mel:
             melspec_params = {
@@ -317,7 +317,7 @@ def specshow_with_annotation(y: np.ndarray,
 
                         plt.legend()
 
-            st.pyplot()
+            st.pyplot(fig)
 
 
 def specshow(y: np.ndarray, sr: int, y_processed=None):
@@ -348,7 +348,7 @@ def specshow(y: np.ndarray, sr: int, y_processed=None):
             y_plot_processed = y_processed[start_index:end_index]
 
         st.sidebar.markdown("##### (Mel)spectrogram parameters")
-        mel = st.sidebar.checkbox("Mel scale")
+        mel = st.sidebar.checkbox("Mel scale", value=True)
 
         n_fft = st.sidebar.number_input(
             "n_fft", min_value=64, max_value=8192, value=1024, step=64)
@@ -361,7 +361,7 @@ def specshow(y: np.ndarray, sr: int, y_processed=None):
                 "fmin", min_value=1, max_value=8192, value=20, step=100)
             fmax = st.sidebar.number_input(
                 "fmax", min_value=4000, max_value=44100, value=14000, step=100)
-        log = st.sidebar.checkbox("apply log")
+        log = st.sidebar.checkbox("apply log", value=True)
 
         if mel:
             melspec_params = {
@@ -457,4 +457,4 @@ def specshow(y: np.ndarray, sr: int, y_processed=None):
                             x_axis="time",
                             y_axis="linear")
                         plt.colorbar()
-            st.pyplot()
+            st.pyplot(fig)
