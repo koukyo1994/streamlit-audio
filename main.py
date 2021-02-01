@@ -1,4 +1,3 @@
-import pandas as pd
 import streamlit as st
 
 import components as C
@@ -8,9 +7,6 @@ if __name__ == "__main__":
     st.title("Audio Checking Tool")
 
     base_folder = st.text_input("specify directory which contains audio file")
-    tp = pd.read_csv("../input/train_tp.csv")
-    fp = pd.read_csv("../input/train_fp.csv")
-    st.dataframe(tp)
     path = utils.check_folder(base_folder)
     if path is not None:
         audio_files = sorted([
@@ -20,14 +16,6 @@ if __name__ == "__main__":
         ])
         audio_file_name = st.selectbox(
             "Choose audio file", options=audio_files)
-        audio_id = audio_file_name.replace(".flac", "")
-        tp_in_audio = tp.query(f"recording_id == '{audio_id}'").reset_index()
-        fp_in_audio = fp.query(f"recording_id == '{audio_id}'").reset_index()
-
-        st.text("tp")
-        st.dataframe(tp_in_audio)
-        st.text("fp")
-        st.dataframe(fp_in_audio)
 
         audio_path = path / audio_file_name
         audio_info = utils.check_audio_info(audio_path)
@@ -79,8 +67,8 @@ if __name__ == "__main__":
                                                audio_file_name, y_processed)
         else:
             if event_level_annotation is None:
-                C.waveplot(y, sr, tp=tp_in_audio, fp=fp_in_audio)
-                C.specshow(y, sr, tp=tp_in_audio, fp=fp_in_audio)
+                C.waveplot(y, sr)
+                C.specshow(y, sr)
             else:
                 C.waveplot_with_annotation(
                     y,
