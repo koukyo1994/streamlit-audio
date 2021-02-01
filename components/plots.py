@@ -1,12 +1,13 @@
 import librosa
 import librosa.display as display
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
 import pandas as pd
 import streamlit as st
 
 
-def waveplot(y: np.ndarray, sr: int, processed=None):
+def waveplot(y: np.ndarray, sr: int, processed=None, tp: pd.DataFrame=None, fp: pd.DataFrame=None):
     plot_wave = st.checkbox("Waveplot")
     if plot_wave:
         st.sidebar.markdown("#### Waveplot settings")
@@ -39,6 +40,14 @@ def waveplot(y: np.ndarray, sr: int, processed=None):
                 sr=sr,
                 alpha=0.5,
                 color="red")
+        if tp is not None and len(tp) > 0:
+            for _, row in tp.iterrows():
+                plt.axvspan(row["t_min"], row["t_max"], color="g", alpha=0.5, label=str(row["species_id"]))
+
+        if fp is not None and len(fp) > 0:
+            for _, row in fp.iterrows():
+                plt.axvspan(row["t_min"], row["t_max"], color="r", alpha=0.5, label=str(row["species_id"]))
+        plt.legend()
 
         st.pyplot(fig)
 
@@ -320,7 +329,7 @@ def specshow_with_annotation(y: np.ndarray,
             st.pyplot(fig)
 
 
-def specshow(y: np.ndarray, sr: int, y_processed=None):
+def specshow(y: np.ndarray, sr: int, y_processed=None, tp: pd.DataFrame=None, fp: pd.DataFrame=None):
     plot_spectrogram = st.checkbox("Spectrogram plot")
     if plot_spectrogram:
         st.sidebar.markdown("#### Spectrogram plot settings")
@@ -439,6 +448,7 @@ def specshow(y: np.ndarray, sr: int, y_processed=None):
             else:
                 with st.spinner("Plotting"):
                     fig = plt.figure(figsize=(12, 4))
+                    ax = plt.axes()
                     if mel:
                         display.specshow(
                             spec,
@@ -457,4 +467,28 @@ def specshow(y: np.ndarray, sr: int, y_processed=None):
                             x_axis="time",
                             y_axis="linear")
                         plt.colorbar()
+                    if tp is not None and len(tp) > 0:
+                        for _, row in tp.iterrows():
+                            rect = patches.Rectangle(
+                                (row["t_min"], row["f_min"]),
+                                row["t_max"] - row["t_min"],
+                                row["f_max"] - row["f_min"],
+                                linewidth=1, 
+                                edgecolor="g",
+                                facecolor="g",
+                                alpha=0.5,
+                                label="tp")
+                            ax.add_patch(rect)
+                    if fp is not None and len(fp) > 0:
+                        for _, row in fp.iterrows():
+                            rect = patches.Rectangle(
+                                (row["t_min"], row["f_min"]),
+                                row["t_max"] - row["t_min"],
+                                row["f_max"] - row["f_min"],
+                                linewidth=1,
+                                edgecolor="r",
+                                facecolor="r",
+                                alpha=0.5,
+                                label="fp")
+                            ax.add_patch(rect)
             st.pyplot(fig)

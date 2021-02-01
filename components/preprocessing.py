@@ -19,7 +19,7 @@ def butterworth_filter(y: np.ndarray,
 def preprocess_on_wave(y: np.ndarray, sr: int, audio_path: str):
     st.sidebar.markdown("#### Preprocess option")
     option = st.sidebar.selectbox(
-        "process", options=["-", "normalize", "lowpass", "highpass", "denoise", "nussl"])
+        "process", options=["-", "normalize", "lowpass", "highpass", "bandpass", "denoise", "nussl"])
     if option == "lowpass":
         param_N = st.sidebar.number_input(
             "N", min_value=1, max_value=10, value=4, step=1)
@@ -40,6 +40,18 @@ def preprocess_on_wave(y: np.ndarray, sr: int, audio_path: str):
         filtered = butterworth_filter(
             y, sr=sr, N=param_N, cutoff=param_cutoff, btype="highpass")
         return np.asfortranarray(filtered)
+    elif option == "bandpass":
+        param_N = st.sidebar.number_input(
+            "N", min_value=1, max_value=10, value=4, step=1)
+        upper_limit = st.sidebar.number_input(
+            "upper_limit", min_value=0.0, max_value=16000.0, value=16000.0, step=10.0)
+        lower_limit = st.sidebar.number_input(
+            "lower_limit", min_value=0.0, max_value=16000.0, value=20.0, step=10.0)
+        lowpassed = butterworth_filter(
+            y, sr=sr, N=param_N, cutoff=upper_limit, btype="lowpass")
+        bandpassed = butterworth_filter(
+            lowpassed, sr=sr, N=param_N, cutoff=lower_limit, btype="highpass")
+        return np.asfortranarray(bandpassed)
     elif option == "normalize":
         max_vol = np.abs(y).max()
         y_vol = y * 1 / (max_vol)
